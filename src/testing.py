@@ -10,7 +10,11 @@ def generate_test(n):
     b = A @ x
     return A, x, b
 
-def test(num):
+def generate_test_vec(n, num):
+    return [100 * np.random.rand(n) for _ in range(num)]
+    
+
+def test_cg(num):
     for _ in range(num):
         proc = subprocess.Popen(["./test"], stdin=subprocess.PIPE,
                              stdout=subprocess.PIPE,
@@ -46,5 +50,28 @@ def test(num):
         print("max error: ", np.max(np.abs(cg - real)))
         print("duration: ", line.split(" ")[-1])
 
+def test_add(num):
+    for _ in range(num):
+        proc = subprocess.Popen(["./test"], stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT,
+                             text=True)
+        
+        # Get current n from cpp output
+        line = proc.stdout.readline()
+        cur_n = int(line.split(" ")[-1])
+        print("cur n: ", cur_n)
+
+        line = proc.stdout.readline()
+
+        u, v = generate_test_vec(cur_n, 2)
+        np.savetxt("../data/vec1.data", u)
+        np.savetxt("../data/vec2.data", v)
+
+        proc.stdin.write('\n')
+        proc.stdin.flush()
+
+        print(proc.stdout.readline())
+
 if __name__ == "__main__":
-    test(5)
+    test_add(5)
