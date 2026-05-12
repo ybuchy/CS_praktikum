@@ -13,6 +13,49 @@ def generate_test(n):
 def generate_test_vec(n, num):
     return [100 * np.random.rand(n) for _ in range(num)]
     
+def generate_data(n, num_vecs, num_mats):
+    vectors = [100 * np.random.rand(n) for _ in range(num_vecs)]
+    # Matrices need to be symmetric positive definite
+    matrices = list(map(lambda M: M.transpose() @ M + n * np.eye(n),
+                        [100 * np.random.rand(n, n) for _ in range(num_mats)]))
+    return vectors, matrices
+
+
+def test_fn(fname, num):
+    for _ in range(num):
+        proc = subprocess.Popen(["./test", "--function", fname], stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT,
+                             text=True)
+        
+        # Get current n from cpp output
+        line = proc.stdout.readline()
+        cur_n = int(line.split(" ")[-1])
+        print("cur n: ", cur_n)
+
+        line = proc.stdout.readline()
+        num_vecs = int(line.split(" ")[-1])
+        print("num vecs: ", num_vecs)
+
+        line = proc.stdout.readline()
+        num_mats = int(line.split(" ")[-1])
+        print("num mats: ", num_mats)
+
+        line = proc.stdout.readline()
+
+        vectors, matrices = generate_data(cur_n, num_vecs, num_mats)
+        for k, vector in enumerate(vectors):
+            np.savetxt(f"../data/vec{k}.data", vector)
+        for k, matrix in enumerate(matrices):
+            np.savetxt(f"../data/mat{k}.data", matrix.reshape(-1))
+
+        proc.stdin.write('\n')
+        proc.stdin.flush()
+
+        while line := proc.stdout.readline():
+            print(line)
+
+    
 
 def test_cg(num):
     for _ in range(num):
@@ -74,4 +117,4 @@ def test_add(num):
         print(proc.stdout.readline())
 
 if __name__ == "__main__":
-    test_add(5)
+    test_fn("matVec", 5)

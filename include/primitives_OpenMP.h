@@ -8,11 +8,10 @@ namespace prim_omp {
     void matVec(T* w, const T* A, const T* v) {
         // [? TODO] Why declare here?
         T sum;
+#pragma omp parallel for
         for (uint32_t i = 0; i < n; i += 1) {
             // Matrix is stored in contiguous memory block
-            // [? TODO] sum instead of w[i] = for parallelization?
             sum = static_cast<T>(0);
-            // [? TODO] can't just omp for
             for (uint32_t j = 0; j < n; j++) {
                 sum += A[i * n + j] * v[j];
             }

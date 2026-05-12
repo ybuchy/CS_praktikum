@@ -1,10 +1,10 @@
 #pragma once
 #include <cmath>
 #include <cstdint>
-#include <primitives.h>
+#include <primitives_OpenMP.h>
 
 
-namespace prim {
+namespace prim_omp {
     // initialized (n x n) identity matrix at given array pointer
     template<typename T, uint32_t n>
     void identity(T* M) {
@@ -27,13 +27,13 @@ namespace prim {
             identity<T, n>(M);
         }
 
-        T b_norm = sqrt(prim::dot<T, n>(b, b));
+        T b_norm = sqrt(prim_omp::dot<T, n>(b, b));
         T tol = std::max(atol, rtol * b_norm);
 
         T Ax_0[n];
-        prim::matVec<T, n>(Ax_0, A, x_0);
+        prim_omp::matVec<T, n>(Ax_0, A, x_0);
         T r[n];
-        prim::addVec<T, n>(r, b, Ax_0, true);
+        prim_omp::addVec<T, n>(r, b, Ax_0, true);
 
 
 
@@ -49,29 +49,29 @@ namespace prim {
         T z[n] = {};
     
         for (uint32_t iter = 0; iter < maxiter; iter += 1) {
-            r_norm = sqrt(prim::dot<T, n>(r, r));
+            r_norm = sqrt(prim_omp::dot<T, n>(r, r));
             if (r_norm < tol) {
                 if (iter == 0) {
                     for (uint32_t i = 0; i < n; i += 1) x[i] = x_0[i];
                 }
                 return 0;
             }
-            prim::matVec<T, n>(z, M, r);
-            rho_cur = prim::dot<T, n>(r, z);
+            prim_omp::matVec<T, n>(z, M, r);
+            rho_cur = prim_omp::dot<T, n>(r, z);
             if (iter > 0) {
-                prim::facVec<T, n>(p, rho_cur / rho_prev, p);
-                prim::addVec<T, n>(p, p, z);
+                prim_omp::facVec<T, n>(p, rho_cur / rho_prev, p);
+                prim_omp::addVec<T, n>(p, p, z);
             } else {
                 for(uint32_t i = 0; i < n; i += 1) {
                     p[i] = z[i];
                 }
             }
-            prim::matVec<T, n>(q, A, p);
+            prim_omp::matVec<T, n>(q, A, p);
             alpha = rho_cur / prim_omp::dot<T, n>(p, q);
-            prim::facVec<T, n>(ap, alpha, p);
-            prim::addVec<T, n>(x, x, ap);
-            prim::facVec<T, n>(aq, alpha, q);
-            prim::addVec<T, n>(r, r, aq, true);
+            prim_omp::facVec<T, n>(ap, alpha, p);
+            prim_omp::addVec<T, n>(x, x, ap);
+            prim_omp::facVec<T, n>(aq, alpha, q);
+            prim_omp::addVec<T, n>(r, r, aq, true);
             rho_prev = rho_cur;
         }
         return maxiter;
